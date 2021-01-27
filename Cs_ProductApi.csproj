@@ -16,5 +16,6 @@
     <Folder Include="Models\" />
     <Folder Include="Database\" />
     <Folder Include="Controllers\" />
+    <Folder Include="textfile\" />
   </ItemGroup>
 </Project>

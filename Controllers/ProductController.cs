@@ -35,9 +35,9 @@ namespace Cs_ProductApi.Controllers
                 //IEnumerable<Product> data = DatabaseContext.Products.Include(p => p.ProductCategory).ToList();
                 //return Ok(data);
 
-                var todoItem = await DatabaseContext.Products.Include(p => p.ProductCategory).ToListAsync();
+                var data = await DatabaseContext.Products.Include(p => p.ProductCategory).ToListAsync();
 
-                return Ok(todoItem);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -45,6 +45,8 @@ namespace Cs_ProductApi.Controllers
                 return NotFound(ex.Message);
             }
         }
+
+
 
         [HttpGet("join")]
         public IActionResult GetProductsByJoin()

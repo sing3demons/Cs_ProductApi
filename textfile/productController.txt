@@ -1,0 +1,135 @@
+﻿https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-5.0&tabs=visual-studio
+
+{
+
+    [Route("api/[controller]")]
+    public class ProductController : ControllerBase
+    {
+
+        ILogger<ProductController> _logger;
+        private readonly DatabaseContext DatabaseContext;
+
+        public ProductController(ILogger<ProductController> logger, DatabaseContext databaseContext)
+        {
+            _logger = logger;
+            this.DatabaseContext = databaseContext;
+        }
+
+        [HttpGet]
+        public IActionResult GetProducts()
+        {
+            try
+            {
+                IEnumerable<Product> result = DatabaseContext.Products.ToList();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProducts: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("{id}", Name = "GetProduct")]
+        public IActionResult GetProductById(int id)
+        {
+            try
+            {
+                Product result = DatabaseContext.Products.SingleOrDefault(p => p.ProductID == id);
+                if (result != null)
+                {
+                    return Ok(result);
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProductById: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        [HttpPost]
+        public IActionResult CreateProduct([FromBody] Product model)
+        {
+            try
+            {
+                DatabaseContext.Products.Add(model);
+                DatabaseContext.SaveChanges();
+
+                return CreatedAtRoute("GetProduct", new { id = 8 }, model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"CreateProduct: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateProduct([FromBody] Product model, int id)
+        {
+            try
+            {
+                var product = DatabaseContext.Products.Find(id);
+
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                product.Name = model.Name;
+                product.Price = model.Price;
+                product.CategoryID = model.CategoryID;
+
+                DatabaseContext.Products.Update(product);
+                DatabaseContext.SaveChanges();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"UpdateProduct: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteProduct(int id)
+        {
+            try
+            {
+                var product = DatabaseContext.Products.Find(id);
+
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                DatabaseContext.Products.Remove(product);
+                DatabaseContext.SaveChanges();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"DeleteProduct: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("join")]
+        public IActionResult GetProductsByJoin()
+        {
+            try
+            {
+                IEnumerable<Product> result = DatabaseContext.Products.Include(p => p.ProductCategory).Include(c => c.ProductSupplier).ToList();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProductsByJoin: {ex.Message}");
+                return BadRequest();
+            }
+        }
+    }
+}
