@@ -1,45 +1,97 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Cs_ProductApi.Database;
 using Cs_ProductApi.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
-namespace Cs_ProductApi.Controller
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace Cs_ProductApi.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductController : Controller
     {
 
-    private readonly DatabaseContext DatabaseContext;
-    public ProductController(DatabaseContext db)
-    {
-        DatabaseContext = db;
-    }
+        ILogger<ProductController> _logger;
+        private readonly DatabaseContext DatabaseContext;
 
-
-    //api/product
-    //api/product/?name=name
-    [HttpGet]
-    public IEnumerable<Product> GetProducts([FromQuery] string name)
-    {
-        var data = DatabaseContext.Products.ToList();
-            return data;
-    }
-
-        //api/product/:value
-        [HttpGet("{name}/{age}")]
-        public string GetByValue(string name, int age)
+        public ProductController(ILogger<ProductController> logger, DatabaseContext databaseContext)
         {
-            return $"Hello {name} Age: {age}";
+            _logger = logger;
+            this.DatabaseContext = databaseContext;
         }
 
-        //queryString
-        [HttpGet("query")]
-        public string GetQuery([FromQuery] string name)
+        // ------> GET: api/values
+        [HttpGet]
+        public IActionResult GetProducts()
         {
-            return $"Hello {name} ";
+            try
+            {
+                IEnumerable<Product> data = DatabaseContext.Products.Include(p => p.ProductCategory).ToList();
+            return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProducts: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("join")]
+        public IActionResult GetProductsByJoin()
+        {
+            try
+            {
+                IEnumerable<Product> result = DatabaseContext.Products.Include(p => p.ProductCategory).ToList();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProductsByJoin: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        // GET api/values/5
+        [HttpGet("{id}")]
+        public IActionResult Get(int id)
+        {
+            try
+            {
+                Product product = DatabaseContext.Products.SingleOrDefault(p => p.ID == id);
+                if (product == null)
+                {
+                    return NotFound();
+                }
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetProduct: {ex.Message}");
+                return BadRequest();
+            }
+        }
+
+        // POST api/values
+        [HttpPost]
+        public void Post([FromBody] string value)
+        {
+        }
+
+        // PUT api/values/5
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
+        {
+        }
+
+        // DELETE api/values/5
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
         }
     }
 }
