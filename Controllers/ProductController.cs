@@ -8,12 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace Cs_ProductApi.Controllers
 {
-    [Route("api/[controller]")]
-    public class ProductController : Controller
+    [Route("api/v1/[controller]")]
+    public class ProductController : ControllerBase
     {
 
         ILogger<ProductController> _logger;
@@ -25,18 +23,13 @@ namespace Cs_ProductApi.Controllers
             this.DatabaseContext = databaseContext;
         }
 
-        // ------> GET: api/values
+        // ------> GET: api/product
         [HttpGet]
-        //public IActionResult GetProducts()
         public async Task<ActionResult<Product>> GetProducts() 
         {
             try
             {
-                //IEnumerable<Product> data = DatabaseContext.Products.Include(p => p.ProductCategory).ToList();
-                //return Ok(data);
-
                 var data = await DatabaseContext.Products.Include(p => p.ProductCategory).ToListAsync();
-
                 return Ok(data);
             }
             catch (Exception ex)
@@ -47,38 +40,18 @@ namespace Cs_ProductApi.Controllers
         }
 
 
-
-        [HttpGet("join")]
-        public IActionResult GetProductsByJoin()
-        {
-            try
-            {
-                IEnumerable<Product> result = DatabaseContext.Products.Include(p => p.ProductCategory).ToList();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GetProductsByJoin: {ex.Message}");
-                return BadRequest();
-            }
-        }
-
         // GET: api/product/1
-        //[HttpGet("{id}", Name = "GetItem")]
-        //public IActionResult CreateProduct([FromBody] Product model)
         [HttpGet("{id}")]
         public async Task<ActionResult> GetItem(int id)
         {
             try
             {
-                //Product product =  DatabaseContext.Products.SingleOrDefault(p => p.ID == id);
                 var product = await DatabaseContext.Products.FindAsync(id);
                 if (product == null)
                 {
-                    return NotFound();
+                     throw new ArgumentException();
                 }
 
-     
                 return Ok(product);
             }
             catch (Exception ex)
@@ -90,17 +63,12 @@ namespace Cs_ProductApi.Controllers
 
         // POST: api/product
        [HttpPost]
-        //public IActionResult CreateProduct([FromBody] Product model)
        public async Task<ActionResult<Product>> CreateProduct([FromBody] Product model)
         {
             try
             {
-               
-                //DatabaseContext.Products.Add(model);
                 DatabaseContext.Products.Add(model);
-                //DatabaseContext.SaveChanges();
                 await DatabaseContext.SaveChangesAsync();
-                //return CreatedAtRoute("GetProduct", new { id = 8 }, model);
                 return CreatedAtAction(nameof(GetItem), new { id = model.ID }, model);
             }
             catch (Exception ex)
@@ -113,8 +81,6 @@ namespace Cs_ProductApi.Controllers
         // PUT api/values/5
         [HttpPut("{id}")]
         public IActionResult UpdateProduct([FromBody] Product model, int id)
-        //public async Task<IActionResult> UpdateProduct(int id, Product model)
-
         {
             try
             {
@@ -122,7 +88,7 @@ namespace Cs_ProductApi.Controllers
 
                 if (product == null)
                 {
-                    return NotFound();
+                    throw new AggregateException();
                 }
 
                 product.Name = model.Name;
@@ -142,16 +108,12 @@ namespace Cs_ProductApi.Controllers
                 _logger.LogError($"UpdateProduct: {ex.Message}");
                 return BadRequest();
             }
-
-
-    
         }
   
       
         // DELETE: api/product/5
         [HttpDelete("{id}")]
         public IActionResult DeleteProduct(int id)
-        //public async Task<IActionResult> Delete(int id)
         {
             try
             {
@@ -159,7 +121,7 @@ namespace Cs_ProductApi.Controllers
 
                 if (product == null)
                 {
-                    return NotFound();
+                    throw new AggregateException();
                 }
 
                 DatabaseContext.Products.Remove(product);
@@ -169,18 +131,8 @@ namespace Cs_ProductApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"DeleteProduct: {ex.Message}");
-                return BadRequest();
+                return NotFound(ex.Message);
             }
-            //    var product = await DatabaseContext.Products.FindAsync(id);
-            //    if (product == null)
-            //    {
-            //        return NotFound("Not Found");
-            //    }
-
-            //    DatabaseContext.Products.Remove(product);
-            //    await DatabaseContext.SaveChangesAsync();
-
-            //    return NoContent();
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Cs_ProductApi.Database
 
             // If database does not exist then the database and all its schema are created
             context.Database.EnsureCreated();
-            //context.Database.EnsureDeleted();
+            // context.Database.EnsureDeleted();
 
             InsertData(context);
         }
